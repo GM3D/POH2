@@ -77,4 +77,4 @@ def compare_outputs(outputs, data):
     return True
 
 if __name__ == '__main__':
-    perform_test(10)
+    perform_test(100)
