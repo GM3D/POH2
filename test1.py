@@ -15,25 +15,25 @@ def perform_test(times):
     if len(sys.argv) == 2:
         prog = sys.argv[1]
         if prog.endswith('.py'):
-            cmdline = ('/usr/bin/python', prog)
+            cmdline = ['/usr/bin/python', prog]
         else:
-            cmdline = (prog)
-            print("peforming test of %s" % cmdline)
-            for data in dataset:
-                p = subprocess.Popen(cmdline,
-                                     stdin=subprocess.PIPE,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE)
-                printdata(data, file=p.stdin)
-                pout, perr = p.communicate()
-                p.stdin.close()
-                r = p.poll()
-                if r != 0:
-                    print "poll status: %s" % r
-                    print " %s didn't end correctly." % cmdline
-                    print "Child process error message: %s" % perr
-                    p.terminate()
-                print "Child process output:\n%s "  % pout.rstrip()
+            cmdline = [prog]
+        print("peforming test of %s" % cmdline)
+        for data in dataset:
+            p = subprocess.Popen(cmdline,
+                                 stdin=subprocess.PIPE,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+            printdata(data, file=p.stdin)
+            pout, perr = p.communicate()
+            p.stdin.close()
+            r = p.poll()
+            if r != 0:
+                print "poll status: %s" % r
+                print " %s didn't end correctly." % cmdline
+                print "Child process error message: %s" % perr
+                p.terminate()
+            print "Child process output:\n%s "  % pout.rstrip()
 
     elif len(sys.argv) == 3:
         outputs = []
