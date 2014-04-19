@@ -49,8 +49,25 @@ def stats(wdict):
     return [len(wdict[h]) for h in wdict]
 
 
+def init_white_list(H, W, grid):
+    r = {}
+    r[(1, 1)] = [(i, j) for (i, j) in prod(xrange(H), xrange(W)) 
+                 if grid[i][j] == '0']
+    return r
+
+def make_white_list(H, W, N, grid, widgets):
+    unexplored = copy.deepcopy(widgets)
+    sort(unexplored, key=lambda x: x[0] + x[1])
+    white_list = init_white_list(H, W, grid)
+    while unexplored:
+        debug_print("unexplored = ", unexplored)
+        shape = get_next(unexplored)
+        update(H, W, grid, white_list, shape)
+    return white_list
+
 def get_next(unexplored):
-    shape = unexplored[0]
+#    shape = unexplored[0]
+    shape = min_shape(unexplored)
     get_next.last_shape = shape
     get_next.last_was_ancillary = False if shape in unexplored else True
     if not get_next.last_was_ancillary:
@@ -60,24 +77,15 @@ def get_next(unexplored):
 get_next.last_shape = (1, 1)
 get_next.last_was_ancillary = False
 
-
-def init_white_list(H, W, grid):
-    r = {}
-    r[(1, 1)] = [(i, j) for (i, j) in prod(xrange(H), xrange(W)) 
-                 if grid[i][j] == '0']
-    return r
-
-def make_white_list(H, W, N, grid, widgets):
-    unexplored = copy.deepcopy(widgets)
-    white_list = init_white_list(H, W, grid)
-    while unexplored:
-        debug_print("unexplored = ", unexplored)
-        shape = get_next(unexplored)
-        update(H, W, grid, white_list, shape)
-    return white_list
-
 def min_shape(unexplored):
-    return (min((x[0] for x in unexplored)), min((x[1] for x in unexplored)))
+    if get_next.last_was_ancillary:
+        h0, w0 = get_next.last_shape
+        candidates = [shape for shape in unexplored 
+                      if shape[0] == h0 or shape[1] == w0]
+        
+        return min(candidates, key=lambda x: x[0] + x[1])
+    else:
+        return (min((x[0] for x in unexplored)), min((x[1] for x in unexplored)))
 
 def update(H, W, grid, white_list, shape):
     hint = find_smaller(shape, white_list)

@@ -1,4 +1,5 @@
 from datagen1 import *
+from datetime import datetime, timedelta
 import subprocess
 
 def gen_dataset(times):
@@ -19,11 +20,18 @@ def perform_test(times):
         else:
             cmdline = [prog]
         print("peforming test of %s" % cmdline)
+        ndata = len(dataset)
+        idata = 0
+        intervals = []
         for data in dataset:
+            print("data %d of %d" % (idata, ndata))
+            print_data_info(data)
             p = subprocess.Popen(cmdline,
                                  stdin=subprocess.PIPE,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
+            print("starting %s..." % prog)
+            start = datetime.now()
             printdata(data, file=p.stdin)
             pout, perr = p.communicate()
             p.stdin.close()
@@ -33,11 +41,19 @@ def perform_test(times):
                 print " %s didn't end correctly." % cmdline
                 print "Child process error message: %s" % perr
                 p.terminate()
+            end = datetime.now()
+            print("%s terminated." % prog)
             print "Child process output:\n%s "  % pout.rstrip()
-
+            intervals.append(end - start)
+            idata += 1
     elif len(sys.argv) == 3:
         outputs = []
+        ndata = len(dataset)
+        idata = 0
+        intervals = [[], []]
         for data in dataset:
+            print("data %d of %d" % (idata, ndata))
+            print_data_info(data)
             for i in (1, 2):
                 prog = sys.argv[i]
                 if prog.endswith('.py'):
@@ -48,6 +64,8 @@ def perform_test(times):
                                      stdin=subprocess.PIPE,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE)
+                print("starting %s..." % prog)
+                start = datetime.now()
                 printdata(data, file=p.stdin)
                 pout, perr = p.communicate()
                 p.stdin.close()
@@ -57,10 +75,15 @@ def perform_test(times):
                     print " %s didn't end correctly." % cmdline
                     print "Child process error message: %s" % perr
                     p.terminate()
+                end = datetime.now()
+                print("%s terminated." % prog)
+                intervals[i - 1].append(end - start)
                 outputs.append(pout.rstrip())
             assert compare_outputs(outputs, data)
+            idata += 1
     else:
         print("Usage: %s, prog1 [prog2]" % sys.argv[0])
+    report_interval(intervals)
 
 
 def compare_outputs(outputs, data):
@@ -76,5 +99,28 @@ def compare_outputs(outputs, data):
             return False
     return True
 
+def print_data_info(data):
+    grid, widgets = data
+    H = len(grid)
+    W = len(grid[0])
+    N = len(widgets)
+    print("(H, W, N) = (%d, %d, %d)" % (H, W, N))
+
+def report_interval(intervals):
+    if type(intervals[0]) == timedelta:
+        n = len(intervals)
+        i = 0
+        print("execute time:")
+        for t in intervals:
+            print("data %d: %f" % ( i, t.seconds + 0.001 * t.microseconds))
+            i += 1
+    elif type(intervals[0]) == list:
+        n = len(intervals[0])
+        i = 0
+        for t1, t2 in intervals:
+            print("data %d: prog1: %f, prog2: %f" % 
+                  (i, t1.seconds + 0.001 * t1.microseconds,
+                   t2.seconds + 0.001 * t2.microseconds))
+            i += 1
 if __name__ == '__main__':
-    perform_test(100)
+    perform_test(2)
