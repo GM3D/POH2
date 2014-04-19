@@ -117,10 +117,10 @@ def report_interval(intervals):
     elif type(intervals[0]) == list:
         n = len(intervals[0])
         i = 0
-        for t1, t2 in intervals:
+        for t1, t2 in zip(intervals[0], intervals[1]):
             print("data %d: prog1: %f, prog2: %f" % 
                   (i, t1.seconds + 0.001 * t1.microseconds,
                    t2.seconds + 0.001 * t2.microseconds))
             i += 1
 if __name__ == '__main__':
-    perform_test(2)
+    perform_test(5)
